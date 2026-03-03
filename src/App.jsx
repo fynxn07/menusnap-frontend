@@ -25,6 +25,7 @@ import AdminOrderDetails from "./pages/AdminOrderDetails"
 import VerifyOTP from "./pages/VerifyOTP"
 import ResetPassword from "./pages/ResetPassword"
 import RequestOTP from "./pages/RequestOTP"
+import { AnalyticsDashboard } from "./pages/AnalyticsDashboard"
 
 
 
@@ -66,6 +67,8 @@ function App() {
       <Route path="/track/:orderId" element={<OrderTracking/>}/>
       <Route path="/admin_orders" element={<AdminOrders/>}/>
       <Route path="/admin_orders/:id" element={<AdminOrderDetails/>}/>
+
+      <Route path="/dashboard/analytics" element={<AnalyticsDashboard/>}/> 
 
     </Routes>
 

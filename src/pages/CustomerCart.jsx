@@ -4,14 +4,17 @@ import { createCustomerOrder } from "../services/customerApi";
 import { ArrowLeft, Minus, Plus } from "lucide-react";
 
 const CustomerCart = () => {
-  const { tableId } = useParams();
+  const params = useParams();
   const navigate = useNavigate();
   const location = useLocation();
+
+  const tableId=location.state?.tableId || params.tableId || null
 
   const { cart: initialCart, restaurant, tableNumber } = location.state || {};
 
   const [cart, setCart] = useState(initialCart || []);
   const [loading, setLoading] = useState(false);
+
 
   if (!initialCart || cart.length === 0) {
     return (
@@ -45,6 +48,8 @@ const CustomerCart = () => {
   const placeOrder = async () => {
     try {
       setLoading(true);
+
+      console.log("Table Id used:",tableId)
 
       const items = cart.map((i) => ({
         menu_item: i.id,

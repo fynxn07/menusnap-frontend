@@ -108,22 +108,22 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
         </button>
 
         <button
-          onClick={() => handleNavigate('/servants')}
+          onClick={() => handleNavigate('/waiter')}
           className={`
             w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors text-left
-            ${isActive('/servants')
+            ${isActive('/waiter')
               ? 'bg-emerald-50 text-emerald-700 font-semibold' 
               : 'text-slate-600 hover:bg-slate-50 font-medium'
             }
           `}
         >
-          <Users className={`w-5 h-5 ${isActive('/servants') ? 'stroke-[2.5]' : ''}`} />
+          <Users className={`w-5 h-5 ${isActive('/waiter') ? 'stroke-[2.5]' : ''}`} />
           <span className="text-sm">Servants</span>
         </button>
 
         
         <button
-          onClick={() => handleNavigate('/analytics')}
+          onClick={() => handleNavigate('/dashboard/analytics')}
           className={`
             w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors text-left
             ${isActive('/analytics')

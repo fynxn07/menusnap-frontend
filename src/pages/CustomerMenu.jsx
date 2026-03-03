@@ -2,6 +2,7 @@ import { useEffect, useState, useRef } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { getCustomerMenu } from "../services/customerApi";
 import { ArrowLeft, Search, ShoppingCart } from "lucide-react";
+import CustomerChatbot from "../components/Menu/CustomerChatbot";
 
 const CustomerMenu = () => {
   const { restaurantId, tableId } = useParams();
@@ -95,6 +96,7 @@ const CustomerMenu = () => {
         cart,
         restaurant,
         tableNumber,
+        tableId,
       },
     });
   };
@@ -283,7 +285,9 @@ const CustomerMenu = () => {
           </button>
         </div>
       )}
+      <CustomerChatbot restaurantId={restaurantId} />
     </div>
+    
   );
 };
 

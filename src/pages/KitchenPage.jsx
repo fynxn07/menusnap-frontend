@@ -13,45 +13,9 @@ const Kitchen = () => {
   const reconnectTimeoutRef = useRef(null);
 
   useEffect(() => {
-    fetchOrders();
-  }, []);
-
-  const fetchOrders = async () => {
-    try {
-      const token = localStorage.getItem('token');
-      const headers = {
-        'Content-Type': 'application/json',
-      };
-      
-      if (token) {
-        headers['Authorization'] = `Bearer ${token}`;
-      }
-
-      const res = await fetch("http://localhost:8080/orders/kitchen_order/", {
-        headers: headers
-      });
-      
-      if (!res.ok) {
-        throw new Error(`HTTP error! status: ${res.status}`);
-      }
-      
-      const data = await res.json();
-      
-      if (data.restaurant_name) {
-        setRestaurant(data.restaurant_name);
-      }
-      
-      setOrders(data.orders || []);
-      setLoading(false);
-    } catch (err) {
-      console.error("Failed to load orders", err);
-      setLoading(false);
-    }
-  };
-
-  // WebSocket for real-time updates
-  useEffect(() => {
-    connectWebSocket();
+    fetchOrders().then(() => {
+      connectWebSocket();
+    });
 
     return () => {
       if (socketRef.current) {
@@ -64,53 +28,103 @@ const Kitchen = () => {
     };
   }, []);
 
-  const connectWebSocket = () => {
-    if (socketRef.current) return;
+  const fetchOrders = async () => {
+    try {
+      const token = localStorage.getItem("access");
 
-    const socket = new WebSocket("ws://localhost:8080/ws/kitchen/");
+      const res = await fetch(
+        "http://localhost:8080/orders/kitchen_order/",
+        {
+          headers: {
+            "Content-Type": "application/json",
+            ...(token && { Authorization: `Bearer ${token}` }),
+          },
+        }
+      );
+
+      if (!res.ok) throw new Error("Failed to fetch orders");
+
+      const data = await res.json();
+
+      setOrders(data);
+
+      if (data.length > 0) {
+        setRestaurant(data[0].restaurant_name);
+      }
+
+      setLoading(false);
+    } catch (err) {
+      console.error(err);
+      setLoading(false);
+    }
+  };
+
+  // 🔥 WEBSOCKET CONNECTION (MULTI-TENANT SAFE)
+  const connectWebSocket = () => {
+    if (socketRef.current?.readyState === WebSocket.OPEN) return;
+
+    const restaurantId = localStorage.getItem("restaurant_id");
+
+    if (!restaurantId) {
+      console.error("Restaurant ID missing — WS not started");
+      return;
+    }
+
+    const socket = new WebSocket(
+      `ws://localhost:8080/ws/kitchen_${restaurantId}/`
+    );
+
     socketRef.current = socket;
 
     socket.onopen = () => {
-      console.log("✅ Connected to kitchen WebSocket");
+      console.log("✅ Connected to kitchen WS");
     };
 
     socket.onmessage = (event) => {
       const data = JSON.parse(event.data);
-      console.log("🔔 WebSocket message:", data);
-      
-      // Handle new order - PREVENT DUPLICATES
-      if (data.type === "new_order" && data.order) {
-        setOrders(prev => {
-          // Check if order already exists by ID
-          const exists = prev.some(order => 
-            order.id.toString() === data.order.id.toString()
-          );
-          
-          if (exists) {
-            console.log("⚠️ Order already exists, skipping duplicate:", data.order.id);
-            return prev;
-          }
-          
-          console.log("🔥 New order received:", data.order);
-          playNotificationSound();
-          return [data.order, ...prev];
-        });
-      }
-      
-      // Handle order status update
-      else if (data.type === "order_updated" && data.order_id) {
-        setOrders(prev =>
-          prev.map(order =>
-            order.id.toString() === data.order_id.toString()
-              ? { ...order, status: data.status }
-              : order
-          )
-        );
-      }
-      
-      // Handle simple message notifications (ignore these for order display)
-      else if (data.message && !data.type) {
-        console.log("📢 Notification:", data.message);
+      console.log("🔔 WS:", data);
+
+      switch (data.event) {
+
+        // ===============================
+        // 🔥 NEW ORDER
+        // ===============================
+        case "new_order":
+          if (!data.order) return;
+
+          setOrders((prev) => {
+            const exists = prev.some(
+              (o) => o.id.toString() === data.order.id.toString()
+            );
+
+            if (exists) return prev;
+
+            playNotificationSound();
+            return [data.order, ...prev];
+          });
+          break;
+
+        // ===============================
+        // 🔥 ORDER UPDATED
+        // ===============================
+        case "order_updated":
+          if (!data.order) return;
+
+          setOrders((prev) => {
+            // Remove served/cancelled
+            if (!data.is_active) {
+              return prev.filter((o) => o.id !== data.order.id);
+            }
+
+            // Update existing
+            return prev.map((o) =>
+              o.id === data.order.id ? data.order : o
+            );
+          });
+          break;
+
+        default:
+          break;
       }
     };
 
@@ -121,7 +135,7 @@ const Kitchen = () => {
     socket.onclose = () => {
       console.log("⚠️ WebSocket closed, attempting to reconnect...");
       socketRef.current = null;
-      
+
       reconnectTimeoutRef.current = setTimeout(() => {
         connectWebSocket();
       }, 3000);
@@ -130,49 +144,44 @@ const Kitchen = () => {
 
   const playNotificationSound = () => {
     try {
-      const audio = new Audio('/notification.mp3');
-      audio.play().catch(e => console.log("Could not play sound:", e));
-    } catch (e) {
-      console.log("Notification sound not available");
-    }
+      const audio = new Audio("/notification.mp3");
+      audio.play().catch(() => { });
+    } catch { }
   };
 
-  // Update order status
+  // 🔥 UPDATE ORDER STATUS
   const updateOrderStatus = async (orderId, newStatus) => {
     try {
-      const token = localStorage.getItem('token');
-      const headers = {
-        'Content-Type': 'application/json',
-      };
-      
-      if (token) {
-        headers['Authorization'] = `Bearer ${token}`;
-      }
+      const token = localStorage.getItem("access");
 
-      const res = await fetch(`http://localhost:8080/orders/kitchen/${orderId}/update_status/`, {
-        method: 'PATCH',
-        headers: headers,
-        body: JSON.stringify({ status: newStatus })
-      });
+      const res = await fetch(
+        `http://localhost:8080/orders/kitchen/${orderId}/update_status/`,
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+            ...(token && { Authorization: `Bearer ${token}` }),
+          },
+          body: JSON.stringify({ status: newStatus }),
+        }
+      );
 
       if (res.ok) {
-        // Update local state immediately
-        setOrders(prev =>
-          prev.map(order =>
-            order.id === orderId ? { ...order, status: newStatus } : order
+        // Optimistic update
+        setOrders((prev) =>
+          prev.map((order) =>
+            order.id === orderId
+              ? { ...order, status: newStatus }
+              : order
           )
         );
-        
-        // If order is served, remove it after a short delay
-        if (newStatus === "SERVED") {
-          setTimeout(() => {
-            setOrders(prev => prev.filter(order => order.id !== orderId));
-          }, 1000);
-        }
       } else {
         const errorData = await res.json();
         console.error("Failed to update status:", errorData);
-        alert(`Failed to update order status: ${errorData.detail || 'Unknown error'}`);
+        alert(
+          `Failed to update order status: ${errorData.detail || "Unknown error"
+          }`
+        );
       }
     } catch (err) {
       console.error("Failed to update order status", err);
@@ -180,64 +189,42 @@ const Kitchen = () => {
     }
   };
 
-  const startPreparing = (orderId) => {
-    updateOrderStatus(orderId, "PREPARING");
-  };
+  const startPreparing = (id) => updateOrderStatus(id, "PREPARING");
+  const markReady = (id) => updateOrderStatus(id, "READY");
+  const markServed = (id) => updateOrderStatus(id, "SERVED");
 
-  const markReady = (orderId) => {
-    updateOrderStatus(orderId, "READY");
-  };
-
-  const markServed = (orderId) => {
-    updateOrderStatus(orderId, "SERVED");
-  };
-
-  // Filter orders by status
+  // 🔥 FILTERING
   const getFilteredOrders = () => {
-    if (activeTab === "NEW") {
-      return orders.filter(o => o.status === "PLACED");
-    } else if (activeTab === "PREPARING") {
-      return orders.filter(o => o.status === "PREPARING");
-    } else if (activeTab === "READY") {
-      return orders.filter(o => o.status === "READY");
-    }
+    if (activeTab === "NEW") return orders.filter(o => o.status === "PLACED");
+    if (activeTab === "PREPARING") return orders.filter(o => o.status === "PREPARING");
+    if (activeTab === "READY") return orders.filter(o => o.status === "READY");
     return orders;
   };
 
   const filteredOrders = getFilteredOrders();
 
-  // Calculate time ago
   const getTimeAgo = (timestamp) => {
-    const now = new Date();
-    const orderTime = new Date(timestamp);
-    const diffMs = now - orderTime;
-    const diffMins = Math.floor(diffMs / 60000);
-    
+    const diffMins = Math.floor((Date.now() - new Date(timestamp)) / 60000);
     if (diffMins < 1) return "Just now";
     if (diffMins === 1) return "1m ago";
     if (diffMins < 60) return `${diffMins}m ago`;
-    
-    const diffHours = Math.floor(diffMins / 60);
-    return `${diffHours}h ago`;
+    return `${Math.floor(diffMins / 60)}h ago`;
   };
 
-  // Count orders by status
-  const countByStatus = (status) => {
-    return orders.filter(o => o.status === status).length;
-  };
+  const countByStatus = (status) =>
+    orders.filter(o => o.status === status).length;
 
-  // Calculate average time
   const calculateAvgTime = (status) => {
-    const statusOrders = orders.filter(o => o.status === status);
-    if (statusOrders.length === 0) return "0m";
-    
-    const avgMs = statusOrders.reduce((sum, order) => {
-      const diffMs = new Date() - new Date(order.created_at);
-      return sum + diffMs;
-    }, 0) / statusOrders.length;
-    
-    const avgMins = Math.floor(avgMs / 60000);
-    return avgMins < 60 ? `${avgMins}m` : `${Math.floor(avgMins / 60)}h`;
+    const list = orders.filter(o => o.status === status);
+    if (!list.length) return "0m";
+
+    const avg =
+      list.reduce(
+        (sum, o) => sum + (Date.now() - new Date(o.created_at)),
+        0
+      ) / list.length / 60000;
+
+    return avg < 60 ? `${Math.floor(avg)}m` : `${Math.floor(avg / 60)}h`;
   };
 
   if (loading) {
@@ -268,7 +255,7 @@ const Kitchen = () => {
                 </p>
               </div>
             </div>
-            
+
             <div className="flex items-center gap-2 px-3 sm:px-4 py-2 bg-emerald-500 bg-opacity-20 border border-emerald-500 rounded-full">
               <div className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse"></div>
               <span className="text-emerald-400 font-bold uppercase text-xs sm:text-sm">
@@ -282,9 +269,8 @@ const Kitchen = () => {
         <div className="flex items-center gap-4 sm:gap-8 px-4 sm:px-6 border-b-2 border-gray-800 overflow-x-auto">
           <button
             onClick={() => setActiveTab("NEW")}
-            className={`pb-3 px-2 font-bold uppercase text-xs sm:text-sm relative transition-colors whitespace-nowrap ${
-              activeTab === "NEW" ? "text-emerald-400" : "text-gray-400 hover:text-gray-300"
-            }`}
+            className={`pb-3 px-2 font-bold uppercase text-xs sm:text-sm relative transition-colors whitespace-nowrap ${activeTab === "NEW" ? "text-emerald-400" : "text-gray-400 hover:text-gray-300"
+              }`}
           >
             NEW
             {countByStatus("PLACED") > 0 && (
@@ -296,12 +282,11 @@ const Kitchen = () => {
               <div className="absolute bottom-0 left-0 right-0 h-1 bg-emerald-400"></div>
             )}
           </button>
-          
+
           <button
             onClick={() => setActiveTab("PREPARING")}
-            className={`pb-3 px-2 font-bold uppercase text-xs sm:text-sm relative transition-colors whitespace-nowrap ${
-              activeTab === "PREPARING" ? "text-emerald-400" : "text-gray-400 hover:text-gray-300"
-            }`}
+            className={`pb-3 px-2 font-bold uppercase text-xs sm:text-sm relative transition-colors whitespace-nowrap ${activeTab === "PREPARING" ? "text-emerald-400" : "text-gray-400 hover:text-gray-300"
+              }`}
           >
             PREPARING
             {countByStatus("PREPARING") > 0 && (
@@ -313,12 +298,11 @@ const Kitchen = () => {
               <div className="absolute bottom-0 left-0 right-0 h-1 bg-emerald-400"></div>
             )}
           </button>
-          
+
           <button
             onClick={() => setActiveTab("READY")}
-            className={`pb-3 px-2 font-bold uppercase text-xs sm:text-sm relative transition-colors whitespace-nowrap ${
-              activeTab === "READY" ? "text-emerald-400" : "text-gray-400 hover:text-gray-300"
-            }`}
+            className={`pb-3 px-2 font-bold uppercase text-xs sm:text-sm relative transition-colors whitespace-nowrap ${activeTab === "READY" ? "text-emerald-400" : "text-gray-400 hover:text-gray-300"
+              }`}
           >
             READY
             {countByStatus("READY") > 0 && (
@@ -358,7 +342,7 @@ const Kitchen = () => {
                       <span>{getTimeAgo(order.created_at)}</span>
                     </div>
                   </div>
-                  
+
                   <div className="text-right">
                     <div className="text-xl sm:text-2xl font-bold text-white">
                       ₹{parseFloat(order.total_amount).toFixed(2)}
@@ -414,16 +398,6 @@ const Kitchen = () => {
                     MARK AS READY
                   </button>
                 )}
-
-                {order.status === "READY" && (
-                  <button
-                    onClick={() => markServed(order.id)}
-                    className="w-full py-3 sm:py-4 bg-emerald-600 hover:bg-emerald-700 rounded-xl flex items-center justify-center gap-2 sm:gap-3 font-bold text-base sm:text-lg transition-colors"
-                  >
-                    <UtensilsCrossed className="w-5 h-5 sm:w-6 sm:h-6" />
-                    MARK AS SERVED
-                  </button>
-                )}
               </div>
             ))
           )}
@@ -456,8 +430,8 @@ const Kitchen = () => {
               </span>
             </div>
           </div>
-          
-          <button 
+
+          <button
             onClick={fetchOrders}
             className="p-2 sm:p-3 hover:bg-gray-800 rounded-lg transition-colors"
             title="Refresh orders"
