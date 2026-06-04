@@ -22,7 +22,7 @@ const Step3Tables = () => {
 
         try {
             const res = await fetch(
-                "http://localhost:8080/restaurants/tables_create/",
+                "https://menusnap-backend.onrender.com/restaurants/tables_create/",
                 {
                     method: "POST",
                     headers: {
@@ -237,7 +237,7 @@ const Step3Tables = () => {
                                 >
                                     <div className="w-full aspect-square bg-green-50/30 rounded-lg mb-3 flex items-center justify-center p-4 border border-dashed border-green-200">
                                         <img
-                                            src={`http://localhost:8080${table.qr_code}`}
+                                            src={`http://menusnap-backend.onrender.com${table.qr_code}`}
                                             alt={`QR Code for Table ${table.table_number}`}
                                             className="w-full h-full object-contain"
                                         />

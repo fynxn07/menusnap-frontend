@@ -33,7 +33,7 @@ const Kitchen = () => {
       const token = localStorage.getItem("access");
 
       const res = await fetch(
-        "http://localhost:8080/orders/kitchen_order/",
+        "https://menusnap-backend.onrender.com/orders/kitchen_order/",
         {
           headers: {
             "Content-Type": "application/json",
@@ -71,7 +71,7 @@ const Kitchen = () => {
     }
 
     const socket = new WebSocket(
-      `ws://localhost:8080/ws/kitchen_${restaurantId}/`
+      `wss://menusnap-backend.onrender.com/ws/kitchen_${restaurantId}/`
     );
 
     socketRef.current = socket;
@@ -155,7 +155,7 @@ const Kitchen = () => {
       const token = localStorage.getItem("access");
 
       const res = await fetch(
-        `http://localhost:8080/orders/kitchen/${orderId}/update_status/`,
+        `https://menusnap-backend.onrender.com/orders/kitchen/${orderId}/update_status/`,
         {
           method: "PATCH",
           headers: {

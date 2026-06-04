@@ -47,7 +47,7 @@ const Step2Branding = () => {
 
         try {
             const res = await fetch(
-                "http://localhost:8080/restaurants/onboarding_branding/",
+                "https://menusnap-backend.onrender.com/restaurants/onboarding_branding/",
                 {
                     method: "PATCH",
                     headers: {

@@ -10,7 +10,7 @@ const Step4Finish = () => {
 
         try {
             await fetch(
-                "http://localhost:8080/restaurants/complete_onboarding/",
+                "https://menusnap-backend.onrender.com/restaurants/complete_onboarding/",
                 {
                     method: "POST",
                     headers: {

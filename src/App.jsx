@@ -26,6 +26,7 @@ import VerifyOTP from "./pages/VerifyOTP"
 import ResetPassword from "./pages/ResetPassword"
 import RequestOTP from "./pages/RequestOTP"
 import { AnalyticsDashboard } from "./pages/AnalyticsDashboard"
+import ItemDetail from "./pages/ItemDetail"
 
 
 
@@ -63,6 +64,7 @@ function App() {
       <Route path="/kitchen" element={<Kitchen/>}/>
       <Route path="/waiter" element={<Waiter/>}/>
       <Route path="/menu/:restaurantId/:tableId" element={<CustomerMenu/>}/>
+      <Route path="/item/:itemId" element={<ItemDetail />} />
       <Route path="/cart/:tableId" element={<CustomerCart />} />
       <Route path="/track/:orderId" element={<OrderTracking/>}/>
       <Route path="/admin_orders" element={<AdminOrders/>}/>

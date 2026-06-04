@@ -49,7 +49,7 @@ const RegisterPage = () => {
 
         try {
             const res = await fetch(
-                "http://localhost:8080/auth/register/",
+                "https://menusnap-backend.onrender.com/auth/register/",
                 {
                     method: "POST",
                     headers: {

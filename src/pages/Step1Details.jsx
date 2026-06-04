@@ -36,7 +36,7 @@ const Step1Details = () => {
 
         try {
             const res = await fetch(
-                "http://localhost:8080/restaurants/onboarding_details/",
+                "https://menusnap-backend.onrender.com/restaurants/onboarding_details/",
                 {
                     method: "PATCH",
                     headers: {
