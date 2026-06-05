@@ -246,11 +246,10 @@ const Step3Tables = () => {
                                         Table {table.table_number}
                                     </p>
 
-                                    {/* Show QR URL below QR */}
-                                    <p className="text-xs text-gray-500 break-all mt-1">
-                                        {`https://menusnap-backend.onrender.com${table.qr_code}`}
+                                    <p className="text-xs font-semibold text-green-600 mt-1">
+                                        Code: {table.manual_code}
                                     </p>
-                                
+
 
 
                                     <button
