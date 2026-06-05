@@ -20,9 +20,9 @@ export const getOrderStatus = (orderId) => {
 };
 
 
-export const joinTable = async (manualCode) => {
-  return axios.post(
-    `${import.meta.env.VITE_API_URL}/restaurants/join-table/`,
+export const joinTable = (manualCode) => {
+  return apiPublic.post(
+    "/restaurants/join-table/",
     {
       manual_code: manualCode,
     }

@@ -3,7 +3,6 @@ import { useNavigate } from "react-router-dom";
 import toast from "react-hot-toast";
 import { joinTable } from "../services/customerApi";
 
-
 const JoinTable = () => {
     const navigate = useNavigate();
 
@@ -13,14 +12,34 @@ const JoinTable = () => {
     const handleJoinTable = async (e) => {
         e.preventDefault();
 
+        if (!manualCode.trim()) {
+            toast.error("Please enter a table code");
+            return;
+        }
+
         try {
-            const { data } = await joinTable(manualCode);
+            setLoading(true);
+
+            const { data } = await joinTable(
+                manualCode.trim().toUpperCase()
+            );
+
+            toast.success("Table found!");
+
+            console.log("JOIN RESPONSE:", data);
 
             navigate(
                 `/menu/${data.restaurant_id}/${data.table_id}`
             );
         } catch (error) {
-            toast.error("Invalid table code");
+            console.error(error);
+
+            toast.error(
+                error?.response?.data?.error ||
+                "Invalid table code"
+            );
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -54,12 +73,14 @@ const JoinTable = () => {
                             }
                             placeholder="e.g. 16CB5C"
                             maxLength={6}
+                            autoComplete="off"
                             className="w-full border border-gray-300 rounded-xl px-4 py-3 text-center text-xl font-bold tracking-widest uppercase focus:outline-none focus:ring-2 focus:ring-emerald-500"
                         />
                     </div>
 
                     <button
                         type="submit"
+                        onClick={() => console.log("BUTTON CLICKED")}
                         disabled={loading}
                         className="w-full bg-emerald-500 hover:bg-emerald-600 text-white font-semibold py-3 rounded-xl transition-all disabled:opacity-50"
                     >
