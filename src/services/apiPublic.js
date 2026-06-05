@@ -6,3 +6,4 @@ const apiPublic = axios.create({
 });
 
 export default apiPublic;
+
