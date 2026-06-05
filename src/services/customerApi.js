@@ -28,3 +28,11 @@ export const joinTable = (manualCode) => {
     }
   );
 };
+
+export const getRestaurantTables = () => {
+    return apiPublic.get("/restaurants/tables/", {
+        headers: {
+            Authorization: `Bearer ${localStorage.getItem("access")}`,
+        },
+    });
+};

@@ -28,6 +28,7 @@ import RequestOTP from "./pages/RequestOTP"
 import { AnalyticsDashboard } from "./pages/AnalyticsDashboard"
 import ItemDetail from "./pages/ItemDetail"
 import JoinTable from "./pages/JoinTable"
+import TableQR from "./pages/TableQR"
 
 
 
@@ -74,6 +75,8 @@ function App() {
       <Route path="/dashboard/analytics" element={<AnalyticsDashboard/>}/> 
 
       <Route path="/join" element={<JoinTable />} />
+      <Route path="/QRcode" element={<TableQR />} />
+      
 
     </Routes>
 
