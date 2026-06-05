@@ -3,11 +3,11 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 
 const Step3Tables = () => {
-    const navigate=useNavigate()
+    const navigate = useNavigate()
 
     useEffect(() => {
         if (!localStorage.getItem("access")) {
-             navigate("/login");
+            navigate("/login");
         }
     }, []);
 
@@ -245,6 +245,14 @@ const Step3Tables = () => {
                                     <p className="font-bold text-gray-900">
                                         Table {table.table_number}
                                     </p>
+
+                                    {/* Show QR URL below QR */}
+                                    <p className="text-xs text-gray-500 break-all mt-1">
+                                        {`https://menusnap-backend.onrender.com${table.qr_code}`}
+                                    </p>
+                                
+
+
                                     <button
                                         onClick={() => handleDownloadSingle(table)}
                                         className="mt-2 text-green-600 hover:text-green-500 transition-colors"
