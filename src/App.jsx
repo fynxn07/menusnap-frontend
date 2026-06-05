@@ -75,7 +75,7 @@ function App() {
       <Route path="/dashboard/analytics" element={<AnalyticsDashboard/>}/> 
 
       <Route path="/join" element={<JoinTable />} />
-      <Route path="/QRcode" element={<TableQR />} />
+      <Route path="/TableQR" element={<TableQR />} />
       
 
     </Routes>

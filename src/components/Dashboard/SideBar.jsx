@@ -159,7 +159,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
         </button>
 
         <button
-          onClick={() => handleNavigate('/Qr-code')}
+          onClick={() => handleNavigate('/TableQR')}
           className={`
             w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors text-left
             ${isActive('/subscription')
@@ -168,7 +168,7 @@ const Sidebar = ({ sidebarOpen, setSidebarOpen }) => {
             }
           `}
         >
-          <CreditCard className={`w-5 h-5 ${isActive('/subscription') ? 'stroke-[2.5]' : ''}`} />
+          <CreditCard className={`w-5 h-5 ${isActive('/TableQR') ? 'stroke-[2.5]' : ''}`} />
           <span className="text-sm font-medium">QR Codes</span>
         </button>
       </nav>
