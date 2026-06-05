@@ -20,22 +20,27 @@ const JoinTable = () => {
         try {
             setLoading(true);
 
-            const { data } = await joinTable(
+            const response = await joinTable(
                 manualCode.trim().toUpperCase()
             );
 
+            console.log("API RESPONSE:", response.data);
+
+            const { restaurant_id, table_id } = response.data;
+
+            console.log("Restaurant:", restaurant_id);
+            console.log("Table:", table_id);
+
             toast.success("Table found!");
 
-            console.log("JOIN RESPONSE:", data);
+            navigate(`/menu/${restaurant_id}/${table_id}`);
 
-            navigate(
-                `/menu/${data.restaurant_id}/${data.table_id}`
-            );
         } catch (error) {
-            console.error(error);
+            console.error("Join Table Error:", error);
 
             toast.error(
                 error?.response?.data?.error ||
+                error?.message ||
                 "Invalid table code"
             );
         } finally {
@@ -80,7 +85,6 @@ const JoinTable = () => {
 
                     <button
                         type="submit"
-                        onClick={() => console.log("BUTTON CLICKED")}
                         disabled={loading}
                         className="w-full bg-emerald-500 hover:bg-emerald-600 text-white font-semibold py-3 rounded-xl transition-all disabled:opacity-50"
                     >
