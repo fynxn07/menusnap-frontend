@@ -27,6 +27,7 @@ import ResetPassword from "./pages/ResetPassword"
 import RequestOTP from "./pages/RequestOTP"
 import { AnalyticsDashboard } from "./pages/AnalyticsDashboard"
 import ItemDetail from "./pages/ItemDetail"
+import JoinTable from "./pages/JoinTable"
 
 
 
@@ -71,6 +72,8 @@ function App() {
       <Route path="/admin_orders/:id" element={<AdminOrderDetails/>}/>
 
       <Route path="/dashboard/analytics" element={<AnalyticsDashboard/>}/> 
+
+      <Route path="/join" element={<JoinTable />} />
 
     </Routes>
 
