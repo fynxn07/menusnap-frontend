@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { getRestaurantTables } from "../services/tableApi";
+import { getRestaurantTables } from "../services/customerApi";
 
 const TableQR = () => {
     const navigate = useNavigate();
