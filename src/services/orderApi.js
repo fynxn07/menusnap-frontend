@@ -12,3 +12,7 @@ export const getAdminOrders = (status) => {
 export const getAdminOrderDetail = (id) => { 
   return api.get(`/orders/admin_order/${id}/`);
 };
+
+export const updateOrderStatus = (id, status) => {
+  return api.patch(`/orders/kitchen/${id}/update_status/`, { status });
+};
